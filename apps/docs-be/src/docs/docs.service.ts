@@ -1,0 +1,96 @@
+import {
+  CreateDocumentDTO,
+  DocumentDTO,
+  UpdateDocumentDTO,
+} from "@gdocs/shared/document.js";
+import { Injectable } from "@nestjs/common";
+import { plainToInstance } from "class-transformer";
+
+@Injectable()
+export class DocsService {
+  constructor(private readonly prismaService: any) {}
+
+  async findAll(userId: string): Promise<DocumentDTO[]> {
+    const docs = await this.prismaService.document.findMany({
+      where: { authorId: userId },
+    });
+
+    if (!docs || docs.length === 0) return [];
+
+    return docs.map((d) =>
+      plainToInstance(DocumentDTO, d, {
+        excludeExtraneousValues: true,
+      }),
+    );
+  }
+
+  async findByIdForUser(
+    docId: string,
+    userId: string,
+  ): Promise<DocumentDTO | null> {
+    const user = await this.prismaService.document.findFirst({
+      where: {
+        id: docId,
+        authorId: userId,
+      },
+      include: { author: true },
+    });
+    return plainToInstance(DocumentDTO, user, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async getOne(id: string, userId: string): Promise<DocumentDTO | null> {
+    const doc = await this.prismaService.document.findFirst({
+      where: { id, authorId: userId },
+      include: { author: true },
+    });
+
+    if (!doc) return null; // controller will handle 404
+
+    return plainToInstance(DocumentDTO, doc, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async create(data: CreateDocumentDTO, userId: string): Promise<DocumentDTO> {
+    const doc = await this.prismaService.document.create({
+      data: {
+        title: data.title,
+        content: data.content ?? "",
+        authorId: userId,
+      },
+      include: { author: true },
+    });
+    return plainToInstance(DocumentDTO, doc, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async update(
+    id: string,
+    data: UpdateDocumentDTO,
+    userId: string,
+  ): Promise<DocumentDTO | null> {
+    const existing = await this.prismaService.document.findFirst({
+      where: { id, authorId: userId },
+      include: { author: true },
+    });
+
+    if (!existing) return null; // unauthorized or not found
+
+    const doc = await this.prismaService.document
+      .update({
+        where: { id },
+        data,
+        include: { author: true },
+      })
+      .catch(() => null);
+
+    if (!doc) return null;
+
+    return plainToInstance(DocumentDTO, doc, {
+      excludeExtraneousValues: true,
+    });
+  }
+}
