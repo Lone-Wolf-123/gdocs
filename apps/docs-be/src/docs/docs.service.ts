@@ -2,16 +2,22 @@ import {
   CreateDocumentDTO,
   DocumentDTO,
   UpdateDocumentDTO,
-} from "@gdocs/shared/document.js";
-import { Injectable } from "@nestjs/common";
-import { plainToInstance } from "class-transformer";
+} from '@gdocs/shared/document.js';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
+import { Repository } from 'typeorm';
+import { Document } from './docs.entity';
 
 @Injectable()
 export class DocsService {
-  constructor(private readonly prismaService: any) {}
+  constructor(
+    @InjectRepository(Document)
+    private repo: Repository<Document>,
+  ) {}
 
   async findAll(userId: string): Promise<DocumentDTO[]> {
-    const docs = await this.prismaService.document.findMany({
+    const docs = await this.repo.find({
       where: { authorId: userId },
     });
 
@@ -28,12 +34,12 @@ export class DocsService {
     docId: string,
     userId: string,
   ): Promise<DocumentDTO | null> {
-    const user = await this.prismaService.document.findFirst({
+    const user = await this.repo.findOne({
       where: {
         id: docId,
         authorId: userId,
       },
-      include: { author: true },
+      relations: { author: true },
     });
     return plainToInstance(DocumentDTO, user, {
       excludeExtraneousValues: true,
@@ -41,9 +47,9 @@ export class DocsService {
   }
 
   async getOne(id: string, userId: string): Promise<DocumentDTO | null> {
-    const doc = await this.prismaService.document.findFirst({
+    const doc = await this.repo.findOne({
       where: { id, authorId: userId },
-      include: { author: true },
+      relations: { author: true },
     });
 
     if (!doc) return null; // controller will handle 404
@@ -54,17 +60,18 @@ export class DocsService {
   }
 
   async create(data: CreateDocumentDTO, userId: string): Promise<DocumentDTO> {
-    const doc = await this.prismaService.document.create({
-      data: {
-        title: data.title,
-        content: data.content ?? "",
-        authorId: userId,
-      },
-      include: { author: true },
+    const doc = this.repo.create({
+      ...data,
+      authorId: userId,
     });
-    return plainToInstance(DocumentDTO, doc, {
-      excludeExtraneousValues: true,
-    });
+
+    const saved = await this.repo.save(doc);
+
+    const dto = await this.getOne(saved.id, userId);
+
+    if (!dto) throw new NotFoundException(`Document creation failed`);
+
+    return dto;
   }
 
   async update(
@@ -72,25 +79,17 @@ export class DocsService {
     data: UpdateDocumentDTO,
     userId: string,
   ): Promise<DocumentDTO | null> {
-    const existing = await this.prismaService.document.findFirst({
+    const existing = await this.repo.findOne({
       where: { id, authorId: userId },
-      include: { author: true },
+      relations: { author: true },
     });
 
     if (!existing) return null; // unauthorized or not found
 
-    const doc = await this.prismaService.document
-      .update({
-        where: { id },
-        data,
-        include: { author: true },
-      })
-      .catch(() => null);
+    const doc = await this.repo.update(id, data).catch(() => null);
 
     if (!doc) return null;
 
-    return plainToInstance(DocumentDTO, doc, {
-      excludeExtraneousValues: true,
-    });
+    return this.getOne(id, userId);
   }
 }

@@ -1,5 +1,6 @@
-// docs.gateway.ts
-import { DocumentDTO } from "@gdocs/shared/document.js";
+// src/docs/docs.gateway.ts
+
+import { DocumentDTO, UpdateDocumentDTO } from '@gdocs/shared/document.js';
 import {
   ConnectedSocket,
   MessageBody,
@@ -7,13 +8,13 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-} from "@nestjs/websockets";
-import * as jwt from "jsonwebtoken";
-import { Server, Socket } from "socket.io";
-import { DocsService } from "./docs.service.js";
+} from '@nestjs/websockets';
+import * as jwt from 'jsonwebtoken';
+import { Server, Socket } from 'socket.io';
+import { DocsService } from './docs.service.js';
 
 @WebSocketGateway({
-  cors: { origin: "*" }, // allow frontend to connect TODO: need to change during deployment
+  cors: { origin: '*' }, // change during deployment
 })
 export class DocsGateway implements OnGatewayConnection {
   @WebSocketServer()
@@ -22,7 +23,7 @@ export class DocsGateway implements OnGatewayConnection {
   constructor(private readonly docsService: DocsService) {}
 
   private verifyToken(token: string) {
-    return jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
+    return jwt.verify(token, process.env.JWT_SECRET || 'dev-secret');
   }
 
   handleConnection(client: Socket) {
@@ -30,50 +31,52 @@ export class DocsGateway implements OnGatewayConnection {
 
     try {
       const payload: any = this.verifyToken(token);
-      client.data.userId = payload.sub;
+      client.data.userId = payload.sub; // attach user ID
     } catch {
       client.disconnect();
     }
   }
 
-  @SubscribeMessage("joinDoc")
+  @SubscribeMessage('joinDoc')
   async handleJoin(
     @MessageBody() data: { docId: string },
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data.userId;
 
-    // 1. Validate access
     const doc = await this.docsService.findByIdForUser(data.docId, userId);
-    if (!doc) {
-      return { error: "Forbidden" };
-    }
+    if (!doc) return { error: 'Forbidden' };
 
-    // 2. Join room
     client.join(data.docId);
 
     return { success: true };
   }
 
-  @SubscribeMessage("updateDoc")
+  @SubscribeMessage('updateDoc')
   async handleUpdateDoc(
-    @MessageBody() data: { docId: string; content: string },
+    @MessageBody() data: { docId: string; content: UpdateDocumentDTO },
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data.userId;
 
     const updated = await this.docsService.update(
       data.docId,
-      { content: data.content },
+      data.content,
       userId,
     );
 
-    this.server.to(data.docId).emit("docUpdated", updated);
+    // Broadcast to all other users in this document room
+    this.server.to(data.docId).emit('docUpdated', updated);
+
     return updated;
   }
 
-  @SubscribeMessage("getDoc")
-  async getFullDoc(@MessageBody() docID: string): Promise<DocumentDTO | null> {
-    return this.docsService.getOne(docID, "TEMP_USER_ID");
+  @SubscribeMessage('getDoc')
+  async getFullDoc(
+    @MessageBody() docId: string,
+    @ConnectedSocket() client: Socket,
+  ): Promise<DocumentDTO | null> {
+    const userId = client.data.userId;
+    return await this.docsService.getOne(docId, userId);
   }
 }

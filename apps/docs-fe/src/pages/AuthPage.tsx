@@ -1,19 +1,22 @@
 // /src/pages/AuthPage.tsx
 //<Route path="/login" element={<AuthPage mode="login" />} />
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "../lib/api";
-import { useAuth } from "../store/useAuth";
+import type { AuthResponseDTO } from '@gdocs/shared/auth/register.js';
+import type { AxiosResponse } from 'axios';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../lib/api';
+import { useAuth } from '../store/useAuth';
 
-export default function AuthPage({ mode }: { mode: "login" | "register" }) {
+export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const navigate = useNavigate();
   const setToken = useAuth((s) => s.setToken);
+  const setUserData = useAuth((d) => d.setUserData);
 
   const [form, setForm] = useState({
-    email: "",
-    password: "",
-    name: "",
+    email: '',
+    password: '',
+    name: '',
   });
 
   function handleInputs(e: React.ChangeEvent<HTMLInputElement>) {
@@ -27,35 +30,56 @@ export default function AuthPage({ mode }: { mode: "login" | "register" }) {
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const endpoint = mode === "register" ? "/auth/register" : "/auth/login";
+    const endpoint = mode === 'register' ? '/auth/register' : '/auth/login';
     const payload =
-      mode === "register"
+      mode === 'register'
         ? form
         : { email: form.email, password: form.password };
 
-    const res = await api.post(endpoint, payload);
-    setToken(res.data.token);
+    try {
+      const res: AxiosResponse<AuthResponseDTO> = await api.post(
+        endpoint,
+        payload,
+      );
 
-    navigate("/docs");
+      console.info(`-> ${res.data.access_token}`);
+      setToken(res.data.access_token);
+      setUserData(res.data.user);
+    } catch (e) {
+      console.info(` => error ${e}`);
+    }
+
+    // navigate('/docs');
   }
 
   return (
     <form onSubmit={submit}>
-      {mode === "register" && (
-        <input placeholder="Name" value={form.name} onChange={handleInputs} />
+      {mode === 'register' && (
+        <input
+          name='name'
+          placeholder='Name'
+          value={form.name}
+          onChange={handleInputs}
+        />
       )}
 
-      <input placeholder="Email" value={form.email} onChange={handleInputs} />
+      <input
+        name='email'
+        placeholder='Email'
+        value={form.email}
+        onChange={handleInputs}
+      />
 
       <input
-        type="password"
-        placeholder="Password"
+        type='password'
+        name='password'
+        placeholder='Password'
         value={form.password}
         onChange={handleInputs}
       />
 
-      <button type="submit">
-        {mode === "register" ? "Create Account" : "Login"}
+      <button type='submit'>
+        {mode === 'register' ? 'Create Account' : 'Login'}
       </button>
     </form>
   );

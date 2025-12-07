@@ -1,7 +1,7 @@
 // share/dto/document.dto.ts
 // @ts-nocheck
-import { Expose, Type } from "class-transformer";
-import { UserDTO } from "./user.js";
+import { Expose, Type } from 'class-transformer';
+import { UserDTO } from './user.js';
 
 export class DocumentDTO {
   @Expose() id!: string;

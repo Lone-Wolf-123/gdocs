@@ -2,7 +2,7 @@ import {
   CreateDocumentDTO,
   DocumentDTO,
   UpdateDocumentDTO,
-} from "@gdocs/shared/document.js";
+} from '@gdocs/shared/document.js';
 import {
   Body,
   Controller,
@@ -13,11 +13,11 @@ import {
   Post,
   Req,
   UseGuards,
-} from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/jwt-auth.guard.js";
-import { DocsService } from "./docs.service.js";
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { DocsService } from './docs.service.js';
 
-@Controller("docs")
+@Controller('docs')
 @UseGuards(JwtAuthGuard)
 export class DocsController {
   constructor(private readonly docsService: DocsService) {}
@@ -25,13 +25,14 @@ export class DocsController {
   @Get()
   async findAll(@Req() req): Promise<DocumentDTO[]> {
     const docs = await this.docsService.findAll(req.user.id);
+
     return docs;
   }
 
-  @Get(":id")
-  async getOne(@Param("id") id: string, @Req() req): Promise<DocumentDTO> {
+  @Get(':id')
+  async getOne(@Param('id') id: string, @Req() req): Promise<DocumentDTO> {
     const doc = await this.docsService.getOne(id, req.user.id);
-    if (!doc) throw new NotFoundException("Document not found");
+    if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 
@@ -41,18 +42,18 @@ export class DocsController {
     @Req() req,
   ): Promise<DocumentDTO> {
     const doc = await this.docsService.create(body, req.user.id);
-    if (!doc) throw new NotFoundException("Document not found");
+    if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 
-  @Patch(":id")
+  @Patch(':id')
   async update(
-    @Param("id") id: string,
+    @Param('id') id: string,
     @Body() body: UpdateDocumentDTO,
     @Req() req,
   ): Promise<DocumentDTO> {
     const doc = await this.docsService.update(id, body, req.user.id);
-    if (!doc) throw new NotFoundException("Document not found");
+    if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 }
