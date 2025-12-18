@@ -6,15 +6,15 @@ import { UsersService } from '../users/users.service.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private users: UsersService) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'dev-secret',
-    });
-  }
+	constructor(private users: UsersService) {
+		super({
+			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			ignoreExpiration: false,
+			secretOrKey: process.env.JWT_SECRET || 'dev-secret',
+		});
+	}
 
-  async validate(payload: JwtPayloadDTO) {
-    return this.users.findById(payload.sub); // becomes req.user
-  }
+	async validate(payload: JwtPayloadDTO) {
+		return this.users.findById(payload.sub); // becomes req.user
+	}
 }

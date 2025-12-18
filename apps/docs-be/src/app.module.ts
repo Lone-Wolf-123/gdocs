@@ -8,19 +8,19 @@ import { DocsModule } from './docs/docs.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
-  imports: [
-    // TypeOrmModule.forRoot({
-    //   type: "sqlite",
-    //   database: ":memory:", // or "db.sqlite"
-    //   synchronize: true,
-    //   entities: [__dirname + "/**/*.entity{.ts,.js}"],
-    // }),
-    TypeOrmModule.forRoot(typeormConfig),
-    DocsModule,
-    AuthModule,
-    UsersModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+	imports: [
+		// TypeOrmModule.forRoot({
+		//   type: "sqlite",
+		//   database: ":memory:", // or "db.sqlite"
+		//   synchronize: true,
+		//   entities: [__dirname + "/**/*.entity{.ts,.js}"],
+		// }),
+		TypeOrmModule.forRoot(typeormConfig),
+		DocsModule,
+		AuthModule,
+		UsersModule,
+	],
+	controllers: [AppController],
+	providers: [AppService],
 })
 export class AppModule {}

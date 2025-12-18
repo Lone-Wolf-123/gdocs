@@ -5,15 +5,15 @@ import { AuthService } from './auth.service.js';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) {}
+	constructor(private auth: AuthService) {}
 
-  @Post('register')
-  register(@Body() dto: RegisterDTO): Promise<AuthResponseDTO> {
-    return this.auth.register(dto);
-  }
+	@Post('register')
+	register(@Body() dto: RegisterDTO): Promise<AuthResponseDTO> {
+		return this.auth.register(dto);
+	}
 
-  @Post('login')
-  login(@Body() dto: LoginDTO): Promise<AuthResponseDTO> {
-    return this.auth.login(dto.email, dto.password);
-  }
+	@Post('login')
+	login(@Body() dto: LoginDTO): Promise<AuthResponseDTO> {
+		return this.auth.login(dto.email, dto.password);
+	}
 }

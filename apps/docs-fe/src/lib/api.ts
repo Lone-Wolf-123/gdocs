@@ -1,19 +1,19 @@
 // /src/lib/api.ts
 
 import axios from 'axios';
-import {useAuth} from '../store/useAuth';
+import { useAuth } from '../store/useAuth';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_baseURL,
+	baseURL: import.meta.env.VITE_baseURL,
 });
 
 // Attach token on every request
 api.interceptors.request.use((config) => {
-  const token = useAuth.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+	const token = useAuth.getState().token;
+	if (token) {
+		config.headers.Authorization = `Bearer ${token}`;
+	}
+	return config;
 });
 
 //TODO: for testing until login with msg is implemented

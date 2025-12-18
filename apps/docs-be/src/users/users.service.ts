@@ -8,42 +8,42 @@ import { User } from './user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private repo: Repository<User>,
-  ) {}
+	constructor(
+		@InjectRepository(User)
+		private repo: Repository<User>,
+	) {}
 
-  async findByEmail(email: string): Promise<UserDTO | null> {
-    const user = await this.repo.findOne({
-      where: { email },
-    });
-    return plainToInstance(UserDTO, user, {
-      excludeExtraneousValues: true,
-    });
-  }
+	async findByEmail(email: string): Promise<UserDTO | null> {
+		const user = await this.repo.findOne({
+			where: { email },
+		});
+		return plainToInstance(UserDTO, user, {
+			excludeExtraneousValues: true,
+		});
+	}
 
-  async getPasswordByEmail(email: string): Promise<UserDTO | null> {
-    const user = await this.repo.findOne({
-      where: { email },
-    });
-    return plainToInstance(UserDTO, user);
-  }
+	async getPasswordByEmail(email: string): Promise<UserDTO | null> {
+		const user = await this.repo.findOne({
+			where: { email },
+		});
+		return plainToInstance(UserDTO, user);
+	}
 
-  async findById(id: string): Promise<UserDTO | null> {
-    const user = await this.repo.findOne({
-      where: { id },
-    });
-    return plainToInstance(UserDTO, user, {
-      excludeExtraneousValues: true,
-    });
-  }
+	async findById(id: string): Promise<UserDTO | null> {
+		const user = await this.repo.findOne({
+			where: { id },
+		});
+		return plainToInstance(UserDTO, user, {
+			excludeExtraneousValues: true,
+		});
+	}
 
-  async createUser(data: RegisterDTO): Promise<UserDTO> {
-    const user = this.repo.create(data);
-    const res = await this.repo.save(user);
+	async createUser(data: RegisterDTO): Promise<UserDTO> {
+		const user = this.repo.create(data);
+		const res = await this.repo.save(user);
 
-    return plainToInstance(UserDTO, res, {
-      excludeExtraneousValues: true,
-    });
-  }
+		return plainToInstance(UserDTO, res, {
+			excludeExtraneousValues: true,
+		});
+	}
 }
